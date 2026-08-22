@@ -1,0 +1,91 @@
+name: Build & Release APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Publish Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Generate Demo Release Keystore
+        run: |
+          echo "Generating demo release keystore..."
+          keytool -genkeypair -v \
+            -keystore "${{ github.workspace }}/my-upload-key.jks" \
+            -alias "upload" \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass "demopassword123" \
+            -keypass "demopassword123" \
+            -dname "CN=WebWatch Release, OU=Mobile, O=WebWatch, L=SanFrancisco, ST=California, C=US"
+
+      - name: Grant Execute Permission to Gradlew
+        run: chmod +x gradlew || chmod +x ./gradlew || true
+
+      - name: Build Release APK
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/my-upload-key.jks
+          STORE_PASSWORD: demopassword123
+          KEY_PASSWORD: demopassword123
+        run: |
+          if [ -f "./gradlew" ]; then
+            ./gradlew assembleRelease --stacktrace
+          else
+            gradle assembleRelease --stacktrace
+          fi
+
+      - name: Prepare Release Artifacts
+        id: prepare_artifacts
+        run: |
+          RELEASE_DIR="app/build/outputs/apk/release"
+          APK_FILE=$(find "$RELEASE_DIR" -name "*.apk" | head -n 1)
+          if [ -z "$APK_FILE" ]; then
+            echo "Error: No release APK found in $RELEASE_DIR"
+            exit 1
+          fi
+          
+          TAG_NAME="v1.0.${{ github.run_number }}"
+          OUTPUT_APK="WebWatch-$TAG_NAME.apk"
+          cp "$APK_FILE" "$OUTPUT_APK"
+          
+          echo "apk_path=$OUTPUT_APK" >> $GITHUB_OUTPUT
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "Release APK ready: $OUTPUT_APK"
+
+      - name: Create GitHub Release and Upload APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.prepare_artifacts.outputs.tag_name }}
+          name: WebWatch Release ${{ steps.prepare_artifacts.outputs.tag_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            ${{ steps.prepare_artifacts.outputs.apk_path }}
+            app/build/outputs/apk/release/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

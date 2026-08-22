@@ -1,0 +1,7 @@
+{
+  "name": "WebWatch",
+  "description": "Track webpage HTML changes with custom intervals, background sync, notification alerts, and GitHub-style diff comparisons.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

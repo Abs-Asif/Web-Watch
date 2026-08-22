@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">WebWatch</string>
+    <string name="monitoring_label">Monitoring</string>
+    <string name="background_sync_active">Background sync active</string>
+    <string name="unrestricted_battery_enabled">Unrestricted battery usage enabled</string>
+    <string name="unrestricted_battery_prompt">Enable unrestricted background battery usage for reliable periodic checks</string>
+    <string name="notification_channel_name">WebWatch Alerts</string>
+    <string name="notification_channel_desc">Notifications when webpage changes are detected</string>
+</resources>
