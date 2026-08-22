@@ -110,7 +110,7 @@ This repository includes an automated GitHub Actions workflow located at [`.gith
   2. Generates a demo release keystore on the fly.
   3. Builds the release APK (`./gradlew assembleRelease`).
   4. Automatically packages the output as `WebWatch-v1.0.<RUN_NUMBER>.apk`.
-  5. Publishes a new GitHub Release with changelogs and attaches the signed release APK ready for download.
+  5. Publishes a new GitHub Release under repository Releases (not in a local directory) with changelogs and attaches the signed release APK ready for download.
 
 ---
 
