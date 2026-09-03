@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.Watcher
 import com.example.ui.theme.*
 import com.example.util.DiffUtils
+import com.example.util.ScheduleHelper
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -55,6 +57,30 @@ fun WatcherCard(
     val lastCheckedStr = watcher.lastCheckedTime?.let {
         timeFormat.format(Date(it))
     } ?: "Never checked"
+
+    var currentTimeMs by remember { mutableStateOf(System.currentTimeMillis()) }
+
+    LaunchedEffect(watcher.isActive) {
+        if (watcher.isActive) {
+            while (true) {
+                currentTimeMs = System.currentTimeMillis()
+                delay(1000L)
+            }
+        }
+    }
+
+    val scheduleList = remember(watcher.scheduleStartTime, watcher.intervalMinutes) {
+        ScheduleHelper.createOneMonthSchedule(watcher.scheduleStartTime, watcher.intervalMinutes)
+    }
+
+    val closestNextTime = remember(scheduleList, currentTimeMs) {
+        ScheduleHelper.getClosestNextScheduledTime(scheduleList, currentTimeMs)
+            ?: ScheduleHelper.getNextScheduledTimeForWatcher(watcher.scheduleStartTime, watcher.intervalMinutes, currentTimeMs)
+    }
+
+    val remainingMs = (closestNextTime - currentTimeMs).coerceAtLeast(0L)
+    val countdownText = remember(remainingMs) { ScheduleHelper.formatCountdown(remainingMs) }
+    val totalScheduleRuns = remember(watcher.intervalMinutes) { ScheduleHelper.getScheduleCount(watcher.intervalMinutes) }
 
     Card(
         modifier = modifier
@@ -264,6 +290,54 @@ fun WatcherCard(
                             )
                         }
                     }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 1-Month Schedule Banner with Countdown Timer
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(BrandPrimaryContainer.copy(alpha = 0.5f))
+                    .border(1.dp, BrandOutline, RoundedCornerShape(16.dp))
+                    .padding(horizontal = 14.dp, vertical = 10.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Schedule,
+                                contentDescription = null,
+                                tint = BrandPrimary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "1-Month Schedule ($totalScheduleRuns runs)",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = BrandPrimary
+                            )
+                        }
+                        Text(
+                            text = if (watcher.isActive) "Next run in: $countdownText" else "Schedule Paused",
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    Text(
+                        text = "${watcher.intervalMinutes}m interval",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = BrandOnSurfaceVariant
+                    )
                 }
             }
 
