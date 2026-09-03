@@ -172,12 +172,14 @@ class WebWatchViewModel(application: Application) : AndroidViewModel(application
             if (id > 0) {
                 val existing = watcherDao.getWatcherById(id)
                 if (existing != null) {
+                    val isIntervalChanged = existing.intervalMinutes != intervalMinutes
                     val updated = existing.copy(
                         name = finalName,
                         url = normalizedUrl,
                         intervalMinutes = intervalMinutes,
                         stripScripts = stripScripts,
-                        formatHtml = formatHtml
+                        formatHtml = formatHtml,
+                        scheduleStartTime = if (isIntervalChanged) System.currentTimeMillis() else existing.scheduleStartTime
                     )
                     watcherDao.updateWatcher(updated)
                     _uiState.update { it.copy(userMessage = "Watcher updated: $finalName") }
@@ -189,7 +191,8 @@ class WebWatchViewModel(application: Application) : AndroidViewModel(application
                     intervalMinutes = intervalMinutes,
                     stripScripts = stripScripts,
                     formatHtml = formatHtml,
-                    isActive = true
+                    isActive = true,
+                    scheduleStartTime = System.currentTimeMillis()
                 )
                 val newId = watcherDao.insertWatcher(newWatcher)
                 _uiState.update { it.copy(userMessage = "Added watcher: $finalName") }

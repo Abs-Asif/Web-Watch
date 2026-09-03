@@ -21,7 +21,8 @@ data class Watcher(
     val lastDeletions: Int = 0,
     val createdAt: Long = System.currentTimeMillis(),
     val stripScripts: Boolean = true,
-    val formatHtml: Boolean = true
+    val formatHtml: Boolean = true,
+    val scheduleStartTime: Long = System.currentTimeMillis()
 )
 
 @Entity(tableName = "snapshot_history")

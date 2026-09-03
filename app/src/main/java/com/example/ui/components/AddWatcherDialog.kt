@@ -29,6 +29,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.data.model.Watcher
 import com.example.network.FetchResult
 import com.example.ui.theme.*
+import com.example.util.ScheduleHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -324,6 +325,16 @@ fun AddWatcherDialog(
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    val scheduleCount = ScheduleHelper.getScheduleCount(intervalMinutes)
+                    Text(
+                        text = "Generates a 1-month schedule list ($scheduleCount timestamps) & tracks closest next countdown.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = BrandOnSurfaceVariant,
+                        fontSize = 11.sp
+                    )
                 }
 
                 // Advanced Comparison Options
